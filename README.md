@@ -20,6 +20,12 @@ Source of truth for personal Claude Code skills, plus the hooks and migration to
 
 The local machine consumes the repo directly via symlinks, so edits in this repo take effect immediately — no sync step.
 
+## Why symlinks
+
+Symlinking `~/.claude/{skills,hooks}` at the repo is what makes this a true source of truth: there's only one copy, edits land in version control as you make them, and there's no drift between "what Claude Code reads" and "what's in git". The alternative (rsync into `~/.claude/`) creates a second copy that can silently fall behind the repo. Symlink wherever you can; only fall back to `migrate.sh` for boxes that can't follow the symlink (true remote machines like spark2).
+
+This applies to both sides of the WSL/Windows divide. The repo lives on the Windows filesystem (`C:\dev\skills`), so both WSL (`/mnt/c/dev/skills`) and Windows (`C:\dev\skills`) can symlink to it directly. Doing both eliminates the `migrate.sh windows` step entirely.
+
 ## Adding / removing a skill
 
 Drop a directory under `skills/` with a `SKILL.md` (and any supporting files). Picked up next session. Delete the directory to remove — don't leave tombstones.
@@ -37,7 +43,7 @@ These scripts only run if `~/.claude/settings.json` wires them up. See "Initial 
 
 ## Migrating to other machines
 
-The local machine reads the repo via symlinks. Other machines (Windows host, remote boxes) need an actual copy. `migrate.sh` rsyncs `skills/` and `hooks/` separately to the right destinations.
+For machines that can't reach the repo's filesystem (true remotes like `spark2`), or where symlinking isn't viable (no admin, no Dev Mode), `migrate.sh` rsyncs `skills/` and `hooks/` separately to the right destinations. Prefer symlinks where you can — see "Why symlinks" above.
 
 ```
 ./migrate.sh windows           # → /mnt/c/Users/<user>/.claude/{skills,hooks}/
@@ -51,6 +57,8 @@ Push only — the repo is the SoT, remote copies are downstream replicas. The sc
 
 ## Initial setup on a new machine
 
+### WSL / Linux / macOS side
+
 ```bash
 git clone <this-repo> ~/dev/skills
 
@@ -62,7 +70,33 @@ ln -s ~/dev/skills/hooks       ~/.claude/hooks
 ln -s ~/dev/skills/migrate.sh  ~/.claude/migrate-skills.sh   # optional convenience
 ```
 
-Then wire the hooks into `~/.claude/settings.json` (merge with existing config — don't overwrite):
+### Windows side (when the repo is on the Windows filesystem)
+
+`mklink /D` needs an elevated terminal **or** Developer Mode enabled (Settings → Privacy & security → For developers → Developer Mode). With Dev Mode on, regular cmd/PowerShell can create symlinks without admin.
+
+From an **elevated** Command Prompt (or any cmd if Dev Mode is on):
+
+```cmd
+move "%USERPROFILE%\.claude\skills" "%USERPROFILE%\.claude\skills.bak"
+move "%USERPROFILE%\.claude\hooks"  "%USERPROFILE%\.claude\hooks.bak"
+mklink /D "%USERPROFILE%\.claude\skills" "C:\dev\skills\skills"
+mklink /D "%USERPROFILE%\.claude\hooks"  "C:\dev\skills\hooks"
+```
+
+Or PowerShell (elevated):
+
+```powershell
+Move-Item "$env:USERPROFILE\.claude\skills" "$env:USERPROFILE\.claude\skills.bak"
+Move-Item "$env:USERPROFILE\.claude\hooks"  "$env:USERPROFILE\.claude\hooks.bak"
+New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.claude\skills" -Target "C:\dev\skills\skills"
+New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.claude\hooks"  -Target "C:\dev\skills\hooks"
+```
+
+Once both sides are symlinked, `migrate.sh windows` is no longer needed — the Windows-side `.claude/` reads the same files the WSL side does. Use `migrate.sh` only for true remote machines (e.g. `spark2`) that can't reach the repo's filesystem.
+
+### Wire the hooks
+
+Both sides need the hooks wired into their respective `settings.json` (merge with existing config — don't overwrite):
 
 ```json
 {
@@ -90,7 +124,7 @@ Then wire the hooks into `~/.claude/settings.json` (merge with existing config �
 }
 ```
 
-Replace `<user>` with the actual home path. On Windows-side `.claude/`, use a Windows-style absolute path.
+Replace `<user>` with the actual home path. On Windows-side `.claude/settings.json`, use Windows-style paths (e.g. `C:\\Users\\<user>\\.claude\\hooks\\copilot-rerequest.sh` — note the doubled backslashes inside JSON strings).
 
 ## Per-repo setup
 
