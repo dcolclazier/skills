@@ -1,43 +1,96 @@
 # skills
 
-Source of truth for personal Claude Code skills.
+Source of truth for personal Claude Code skills, plus the hooks and migration tooling that go with them.
 
 ## Layout
 
-Each top-level directory is a single skill. `~/.claude/skills` is a symlink to this repo, so Claude Code loads skills directly from here — edits in this repo take effect immediately on the local machine, no sync step required.
-
 ```
-~/.claude/skills -> /mnt/c/dev/skills
-```
-
-## Adding a skill
-
-Drop a new directory at the top level with a `SKILL.md` (and any supporting files the skill needs). It's picked up on the next session.
-
-## Removing a skill
-
-Delete the directory and commit. Don't leave tombstone files behind.
-
-## Syncing to other machines
-
-Other machines (Windows host, remote boxes) don't share the WSL filesystem, so they need an actual copy. `~/.claude/migrate-skills.sh` rsyncs from `~/.claude/skills/` (which resolves to this repo via the symlink) to those targets.
-
-```
-~/.claude/migrate-skills.sh windows           # → /mnt/c/Users/<user>/.claude/skills/
-~/.claude/migrate-skills.sh spark2            # → bender@192.168.1.8:~/.claude/skills/
-~/.claude/migrate-skills.sh all
-~/.claude/migrate-skills.sh windows --dry-run
+.
+├── skills/         # → ~/.claude/skills (symlinked)
+│   ├── diagnose/
+│   ├── grill-me/
+│   ├── ...
+│   └── gemini-workflow-brief.md
+├── hooks/          # → ~/.claude/hooks (symlinked)
+│   ├── copilot-rerequest.sh        # PostToolUse on `git push` — re-requests Copilot review
+│   └── pr-merge-teardown.sh        # PostToolUse on `gh pr merge` — branch teardown + triggers /post-merge-cleanup
+├── migrate.sh      # push skills + hooks to other machines (Windows host, remote boxes)
+└── README.md
 ```
 
-The script does not pull — only push. The repo is always the SoT; remote copies are downstream replicas.
+The local machine consumes the repo directly via symlinks, so edits in this repo take effect immediately — no sync step.
+
+## Adding / removing a skill
+
+Drop a directory under `skills/` with a `SKILL.md` (and any supporting files). Picked up next session. Delete the directory to remove — don't leave tombstones.
+
+## Hooks
+
+Two PostToolUse hooks support the engineering skill suite:
+
+- **`copilot-rerequest.sh`** — runs after `git push`. If the current branch has an open PR with Copilot as a reviewer, re-requests a Copilot review automatically. Supports `/resolve-reviews`. Opt out per-session with `SKIP_COPILOT=true`.
+- **`pr-merge-teardown.sh`** — runs after `gh pr merge`. Tears down the branch (local + remote), removes the worktree if any, updates dispatch state, and tells the agent's next turn to invoke `/post-merge-cleanup` for in-repo cleanup. Opt out with `SKIP_PR_TEARDOWN=true`.
+
+Both fail silently with exit 0 — a broken hook never breaks your workflow.
+
+These scripts only run if `~/.claude/settings.json` wires them up. See "Initial setup on a new machine" below for the snippet.
+
+## Migrating to other machines
+
+The local machine reads the repo via symlinks. Other machines (Windows host, remote boxes) need an actual copy. `migrate.sh` rsyncs `skills/` and `hooks/` separately to the right destinations.
+
+```
+./migrate.sh windows           # → /mnt/c/Users/<user>/.claude/{skills,hooks}/
+./migrate.sh spark2            # → bender@192.168.1.8:~/.claude/{skills,hooks}/
+./migrate.sh all
+./migrate.sh windows --dry-run
+./migrate.sh spark2 --delete   # mirror exactly (delete dest files not in source)
+```
+
+Push only — the repo is the SoT, remote copies are downstream replicas. The script does not touch `settings.json` on the receiving side; each machine still needs the hook wiring (see below) the first time.
 
 ## Initial setup on a new machine
 
+```bash
+git clone <this-repo> ~/dev/skills
+
+# Symlink skills, hooks, and the migrate script into ~/.claude/
+mv ~/.claude/skills ~/.claude/skills.bak  2>/dev/null || true
+mv ~/.claude/hooks  ~/.claude/hooks.bak   2>/dev/null || true
+ln -s ~/dev/skills/skills      ~/.claude/skills
+ln -s ~/dev/skills/hooks       ~/.claude/hooks
+ln -s ~/dev/skills/migrate.sh  ~/.claude/migrate-skills.sh   # optional convenience
 ```
-git clone <this-repo> /path/to/skills
-mv ~/.claude/skills ~/.claude/skills.bak  # if it exists
-ln -s /path/to/skills ~/.claude/skills
+
+Then wire the hooks into `~/.claude/settings.json` (merge with existing config — don't overwrite):
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/<user>/.claude/hooks/copilot-rerequest.sh",
+            "if": "Bash(git push *)",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "/home/<user>/.claude/hooks/pr-merge-teardown.sh",
+            "if": "Bash(gh pr merge *)",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}
 ```
+
+Replace `<user>` with the actual home path. On Windows-side `.claude/`, use a Windows-style absolute path.
 
 ## Per-repo setup
 
@@ -71,4 +124,4 @@ grill-me → to-prd → /score(prd) → to-issues → triage → tdd
         → /self-review → PR → /resolve-reviews → merge → /post-merge-cleanup
 ```
 
-Two quality gates (`/score` upstream, `/self-review` pre-PR) and one back-bookend (`/post-merge-cleanup`) bracket the implementation. See `setup-workflow/WORKFLOW-PRIMER.md` for the full orientation.
+Two quality gates (`/score` upstream, `/self-review` pre-PR) and one back-bookend (`/post-merge-cleanup`) bracket the implementation. The PR-bookending hooks (`copilot-rerequest.sh`, `pr-merge-teardown.sh`) are what make `/resolve-reviews` and `/post-merge-cleanup` trigger automatically. See `skills/setup-workflow/WORKFLOW-PRIMER.md` for the full orientation.
