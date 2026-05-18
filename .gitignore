@@ -1,0 +1,7 @@
+# Local working state — PRDs, issue files, score ledgers, sandbox checklists
+# Tracked by /to-prd, /to-issues, /triage, /score per docs/agents/issue-tracker.md
+# but kept local rather than committed (iterative artifacts; not durable project state).
+.scratch/
+
+# User-local guardrail scripts — not shipped with the plugin (per PRD §Distribution shape).
+hooks/mmc-readonly-gh.sh

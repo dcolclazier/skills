@@ -1,6 +1,8 @@
 ---
 name: tdd
 description: Test-driven development with red-green-refactor loop. Implements vertical-slice TDD on issues marked `ready-for-agent` by /triage — reads the agent brief as contract, treats acceptance criteria as the test list, and closes the loop on the issue tracker when all tests pass. Use when the user wants to build features or fix bugs using TDD, mentions "red-green-refactor", wants integration tests, asks for test-first development, or has a `ready-for-agent` issue to implement. For ambiguous, unscoped, or vague work, run /grill-me first; this skill assumes alignment is already done upstream.
+requires-skills: []
+requires-config: []
 ---
 
 # Test-Driven Development

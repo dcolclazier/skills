@@ -2,6 +2,8 @@
 name: score
 description: Universal artifact review/validation/red-team/scoring through weighted multi-perspective critique. Detects artifact type (skill, PR, staged commit, etc.), loads the matching rubric from `rubrics/<type>.md`, dispatches sub-agent personas in parallel (each grounded in published best-practice sources for that artifact type), engages each persona in consensus dialogue to retire speculative critiques, then synthesises a weighted score and structured action ledger. Unlike single-perspective peer skills (`/review`, `/security-review`, `/simplify`), `/score` runs multiple expert lenses in parallel and engages each in dialogue before synthesising — favour those peers for narrow, fast feedback; favour `/score` when multi-angle assessment of the same artifact is the value. Use when the user wants to score, review, validate, red-team, or critically assess any artifact — skill files, PRs, staged commits, code, infra, etc. Dialogue is non-optional — single-pass scoring without engagement is the failure mode this skill exists to prevent.
 argument-hint: "[artifact path or reference] [optional: --rubric <name>]"
+requires-skills: []
+requires-config: []
 ---
 
 # Score

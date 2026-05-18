@@ -1,6 +1,8 @@
 ---
 name: triage
 description: Route incoming issues through a five-role state machine (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) into a state where the right next actor can pick them up. Posts agent briefs, triage notes, or wontfix explanations as appropriate. Reads the canonical-role → label-string mapping from `docs/agents/triage-labels.md`. Use when the user wants to triage existing issues, review incoming bugs or feature requests, prepare issues for an AFK agent, or move a specific issue to a known state. Does NOT create new issues — use `/to-issues` for that.
+requires-skills: []
+requires-config: []
 ---
 
 # Triage

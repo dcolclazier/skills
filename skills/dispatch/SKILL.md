@@ -2,6 +2,8 @@
 name: dispatch
 description: Orchestrates parallel implementation of `ready-for-agent` issues across a dependency graph (typically the issue set produced by /to-issues from a PRD). Spawns isolated subagents in git worktrees, each running /tdd against one issue, then `/self-review --posture auto` on the branch before PR-open (enabled by default — pass `--no-self-review` to disable). Merges in dependency order, handles failures explicitly, surfaces HITL slices and conflicts for human action. Use when the user wants to ship a PRD's worth of work, run a sweep of ready-for-agent issues, or implement multiple slices in parallel. Does NOT auto-merge by default — opens PRs and stops at the merge gate unless explicitly told otherwise. NOT for single-issue work — use /tdd directly for that.
 argument-hint: "[PRD ref | issue list | filter expression | none] [--concurrency N] [--auto-merge] [--no-self-review] [--max-loops N]"
+requires-skills: []
+requires-config: []
 ---
 
 # Dispatch

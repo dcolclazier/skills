@@ -2,6 +2,8 @@
 name: to-issues
 description: Break a plan, spec, or PRD (typically produced by /to-prd) into independently-grabbable vertical-slice issues on the project issue tracker. Each slice cuts through every layer (schema, API, UI, tests) end-to-end — never a horizontal layer of one. Reads `docs/agents/issue-tracker.md` (written by /setup-workflow) to know how to publish (gh, glab, local markdown, or "Other"). Applies `needs-triage` so each issue enters the normal triage flow consumed by /triage. Distinguishes HITL (human-in-the-loop) from AFK (agent-implementable) slices. Use when the user wants to convert a plan or PRD into actionable issues, create implementation tickets, or break work into vertical slices.
 argument-hint: "[plan, PRD reference, or issue URL]"
+requires-skills: []
+requires-config: []
 ---
 
 # To Issues

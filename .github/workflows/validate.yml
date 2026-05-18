@@ -1,0 +1,21 @@
+name: Validate skill frontmatter
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    name: Run validate.sh + test_validate.sh
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run validator against the skills/ tree
+        run: bash validate.sh
+
+      - name: Run validator test suite (fixtures + real codebase)
+        run: bash tests/test_validate.sh

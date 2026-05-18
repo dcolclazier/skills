@@ -1,6 +1,8 @@
 ---
 name: grill-me
 description: Stress-test a plan or design by interrogating terminology, scope, edge cases, trade-offs, and code conflicts — surfacing ambiguity before implementation begins. Captures resolved terms to CONTEXT.md and trade-offs to ADRs when the repo uses them. Use when the user says grill me, poke holes, challenge me, stress-test this, or what am I missing.
+requires-skills: []
+requires-config: []
 ---
 
 <what-to-do>
