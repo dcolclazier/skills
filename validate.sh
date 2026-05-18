@@ -10,20 +10,31 @@
 
 set -uo pipefail
 
+# Keep these arrays in sync with skills/_format/FRONTMATTER-SPEC.md.
+# Adding/removing fields here without updating the spec doc creates contract drift
+# that neither side surfaces.
 KNOWN_FIELDS=(name description argument-hint disable-model-invocation requires-skills requires-config)
 REQUIRED_FIELDS=(name description requires-skills requires-config)
 
 # Extract the YAML frontmatter block (between the first two `---` lines).
-# Returns the body of the frontmatter to stdout; returns 1 if no frontmatter found.
+# Prints the frontmatter body to stdout. Exits awk with status 2 if no opening
+# `---` is found, or with status 3 if the closing `---` is missing (file has
+# `---` at top but no matching close — the entire body would otherwise be
+# silently treated as frontmatter). Returns 0 on success.
 extract_frontmatter() {
     local file="$1"
     awk '
+        BEGIN { n = 0 }
         /^---$/ {
             n++
             if (n == 1) { in_block = 1; next }
-            if (n == 2) { exit }
+            if (n == 2) { found_close = 1; exit }
         }
         in_block && !/^---$/ { print }
+        END {
+            if (n == 0) exit 2
+            if (!found_close) exit 3
+        }
     ' "$file"
 }
 
@@ -79,11 +90,23 @@ validate_file() {
         return 1
     fi
 
-    local frontmatter
+    local frontmatter extract_status
     frontmatter=$(extract_frontmatter "$file")
+    extract_status=$?
+
+    case $extract_status in
+        2)
+            echo "ERROR: $file: no frontmatter found (expected YAML block between --- delimiters)" >&2
+            return 1
+            ;;
+        3)
+            echo "ERROR: $file: unterminated frontmatter (opening --- found, closing --- missing)" >&2
+            return 1
+            ;;
+    esac
 
     if [ -z "$frontmatter" ]; then
-        echo "ERROR: $file: no frontmatter found (expected YAML block between --- delimiters)" >&2
+        echo "ERROR: $file: empty frontmatter" >&2
         return 1
     fi
 
