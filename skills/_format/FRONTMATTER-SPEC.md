@@ -79,6 +79,28 @@ The validator is deliberately narrow:
 - Rejects: missing required field, malformed YAML (unterminated quoted string), unknown top-level field.
 - Accepts: free-text descriptions containing apostrophes (English contractions like `you're`, `PRD's` are not flagged).
 
+## Upgrading from pre-v1 (for forks / adopting teams)
+
+If you have a fork of this repo predating v1 of the frontmatter spec, syncing this change will fail your CI on every existing SKILL.md until you adapt. The breaking changes:
+
+1. **Two new required fields** must be declared in every SKILL.md: `requires-skills:` and `requires-config:`. Empty arrays (`[]`) satisfy v1 — dependency-graph correctness is issue #02's job.
+2. **Unknown fields are rejected.** Any custom field you may have added to your fork's SKILL.md files (e.g., `category:`, `owner:`, `version:`) will now fail validation. You must either rename the field to one of the known fields (`name`, `description`, `argument-hint`, `disable-model-invocation`, `requires-skills`, `requires-config`), drop the field, or contribute it upstream and add it to the known-fields allowlist in `validate.sh`.
+
+A one-liner to add the required empty arrays to every existing SKILL.md in your fork (run from the repo root):
+
+```bash
+for f in skills/*/SKILL.md; do
+  awk '/^---$/{n++; if (n == 2) { print "requires-skills: []"; print "requires-config: []" }} {print}' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+done
+```
+
+Unknown-field cleanup is necessarily manual (decide rename vs drop vs upstream per field). Run `bash validate.sh skills/` to surface any remaining failures.
+
+## Out of scope for v1
+
+- **CRLF line endings.** `validate.sh` matches frontmatter delimiters with `/^---$/` against LF-terminated lines. SKILL.md files saved with CRLF endings (e.g., on Windows without `core.autocrlf` configured) will produce "no frontmatter found." Git's default LF normalization on `text=auto`-attributed files handles this for most contributors; explicit out-of-scope here so anyone hitting it knows to check `git config core.autocrlf` or add `*.md text eol=lf` to `.gitattributes` rather than file a validator bug.
+- **Full YAML support.** Block scalars (`|`, `>`), multi-line strings, anchors, aliases, and other YAML features beyond the narrow grammar above are out of scope. The validator runs against SKILL.md frontmatter only, which uses a restricted subset.
+
 ## Future work
 
 - Issue #02 adds the dependency-graph walker that consumes `requires-skills:` and `requires-config:` to detect cycles and dangling references.
