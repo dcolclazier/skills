@@ -22,7 +22,7 @@ Introduce a test directory (`tests/`) and a CI gate (`.github/workflows/validate
 Specifically:
 
 1. `validate.sh` exists at the repo root. Pure bash; no external dependencies.
-2. Fixture skills under `tests/fixtures/skills/` cover the success and failure modes (3 valid + 4 invalid fixtures: missing required field, missing the new `requires-*` fields, malformed YAML, unknown field).
+2. Fixture skills under `tests/fixtures/skills/` cover the success and failure modes (3 valid + 7 invalid fixtures: missing required field, missing the new `requires-*` fields, malformed YAML, unknown field, missing closing `---` delimiter, opening `---` not on line 1, indented top-level-shaped key).
 3. A pure-bash test runner (`tests/test_validate.sh`) exercises the validator against each fixture and against the real `skills/` tree.
 4. `.github/workflows/validate.yml` runs the test runner on every PR and push.
 
