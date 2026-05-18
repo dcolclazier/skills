@@ -48,8 +48,16 @@ The spec adds two new required frontmatter fields (`requires-skills:` and `requi
 - New skills must declare `requires-skills:` and `requires-config:` — explicit dependency declarations replace implicit prose references.
 - Adopting teams get a defined contract to rely on.
 
-**Negative:**
-- One-time cost: 14 existing SKILL.md files updated to declare the new fields (empty arrays for v1 — issue #02 audits and populates them correctly).
+**Negative — breaking changes for forks and adopting teams:**
+
+The spec is breaking along **two axes** that an adopter syncing from upstream must address. Both are documented in `skills/_format/FRONTMATTER-SPEC.md § Upgrading from pre-v1`:
+
+1. **Two new required fields** (`requires-skills:`, `requires-config:`) must be declared in every SKILL.md. A one-liner is documented in the spec for the empty-array fix.
+2. **Unknown fields are strict-rejected.** Any custom frontmatter field a fork added (e.g., `category:`, `owner:`, `version:`) will now fail validation. This is the less-obvious axis: an adopter who declares the new required fields but kept a custom field will still see their CI red. Mitigation: the rejection error message names the unknown field explicitly so cleanup is mechanical.
+
+In-repo migration is clean: commit `c5b5618` updates all 14 existing SKILL.md files to declare the new fields with empty arrays, so this branch's own CI passes immediately.
+
+**Other negatives:**
 - New contributors must learn the frontmatter spec (mitigated by `skills/_format/FRONTMATTER-SPEC.md`).
 - `disable-model-invocation` is an existing Claude Code skill metadata field; added to the known-fields allowlist (not invented here, but documented here for the first time).
 
