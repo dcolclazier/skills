@@ -68,6 +68,7 @@ assert_reject "invalid-missing-requires rejected"         "$FIXTURES/invalid-mis
 assert_reject "invalid-malformed-yaml rejected"           "$FIXTURES/invalid-malformed-yaml/SKILL.md"           "malformed YAML"
 assert_reject "invalid-unknown-field rejected"            "$FIXTURES/invalid-unknown-field/SKILL.md"            "unknown field 'wat'"
 assert_reject "invalid-missing-close-frontmatter rejected" "$FIXTURES/invalid-missing-close-frontmatter/SKILL.md" "unterminated frontmatter"
+assert_reject "invalid-frontmatter-not-at-start rejected" "$FIXTURES/invalid-frontmatter-not-at-start/SKILL.md" "opening --- delimiter must be on line 1"
 assert_reject "non-existent file rejected"                "$FIXTURES/does-not-exist/SKILL.md"                   "target not found"
 
 echo

@@ -17,14 +17,21 @@ KNOWN_FIELDS=(name description argument-hint disable-model-invocation requires-s
 REQUIRED_FIELDS=(name description requires-skills requires-config)
 
 # Extract the YAML frontmatter block (between the first two `---` lines).
-# Prints the frontmatter body to stdout. Exits awk with status 2 if no opening
-# `---` is found, or with status 3 if the closing `---` is missing (file has
-# `---` at top but no matching close — the entire body would otherwise be
-# silently treated as frontmatter). Returns 0 on success.
+# Prints the frontmatter body to stdout. Exit codes signal specific shape errors:
+#   2 = no opening `---` found anywhere
+#   3 = opening `---` found but no closing `---`
+#   4 = `---` exists in the file but NOT on line 1 (frontmatter must be at the
+#       start of the file per skills/_format/FRONTMATTER-SPEC.md). Without this
+#       check, prose-before-frontmatter would silently slip through and could
+#       falsely accept files where the "frontmatter" is actually mid-document.
 extract_frontmatter() {
     local file="$1"
+    # NOTE: awk's `exit N` mid-program still triggers END, and END's own exit
+    # would overwrite the code. Use a `final_exit` sentinel so END preserves
+    # the early-exit code instead of clobbering it.
     awk '
-        BEGIN { n = 0 }
+        BEGIN { n = 0; final_exit = 0 }
+        NR == 1 && !/^---$/ { final_exit = 4; exit }
         /^---$/ {
             n++
             if (n == 1) { in_block = 1; next }
@@ -32,6 +39,7 @@ extract_frontmatter() {
         }
         in_block && !/^---$/ { print }
         END {
+            if (final_exit > 0) exit final_exit
             if (n == 0) exit 2
             if (!found_close) exit 3
         }
@@ -101,6 +109,10 @@ validate_file() {
             ;;
         3)
             echo "ERROR: $file: unterminated frontmatter (opening --- found, closing --- missing)" >&2
+            return 1
+            ;;
+        4)
+            echo "ERROR: $file: opening --- delimiter must be on line 1 (frontmatter must start at the beginning of the file)" >&2
             return 1
             ;;
     esac
