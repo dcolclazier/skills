@@ -52,16 +52,20 @@ extract_frontmatter() {
 #   - Arrays are either `[]` inline or block-style with indented `-` items
 # Apostrophes inside unquoted free-text values are NOT flagged (English contractions
 # like "you're" / "PRD's" appear in real descriptions and aren't a YAML problem).
-# This is intentionally a narrow grammar, not full YAML.
+#
+# Notable strictness: the only legal indented lines are `-` list items. There is
+# NO loose "indented continuation OK" escape hatch — block scalars (`|`, `>`),
+# multi-line strings, and indented `key: value` are all rejected. Without this,
+# indented misspelled fields would be silently dropped by declared_fields (which
+# only matches column-0 keys), making typos invisible.
 yaml_wellformed() {
     local frontmatter="$1"
 
     while IFS= read -r line; do
         [ -z "$line" ] && continue                # blank lines OK
         [[ "$line" =~ ^[[:space:]]*-[[:space:]] ]] && continue  # list items OK
-        [[ "$line" =~ ^[[:space:]]+[^:[:space:]] ]] && continue # indented continuation OK (loose)
 
-        # Check key shape on top-level lines: must be `<key>:` or `<key>: <value>`.
+        # Top-level lines must be `<key>:` or `<key>: <value>` with NO leading whitespace.
         if ! [[ "$line" =~ ^[a-zA-Z_][a-zA-Z0-9_-]*:[[:space:]]*.*$ ]]; then
             return 1
         fi
