@@ -1,6 +1,8 @@
 ---
 name: to-prd
 description: Synthesise the current conversation context (typically after /grill-me has aligned the plan) into a PRD and publish it to the project issue tracker. Use when the user wants to create a PRD from the current conversation, capture aligned decisions as a published spec, or hand off context-rich work to the issue tracker. Does NOT interview the user — synthesise from existing alignment.
+requires-skills: []
+requires-config: []
 ---
 
 # To PRD

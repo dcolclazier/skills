@@ -2,6 +2,8 @@
 name: resolve-reviews
 description: Resolve **inbound** PR review comments (Copilot, automated bots, or human reviewers). NOT for writing outbound review comments yourself — use `/review` or `/security-review` for that. Classifies each comment into agree-and-act / disagree-and-justify / unsure-and-ask-user against project conventions (CONTEXT.md, ADRs, existing patterns, prior rejected-suggestions), then acts per a configured posture (`auto` / `draft` / `comment-only`). Agree-and-act commits the change + posts thread comment + resolves the conversation. Disagree-and-justify posts a project-grounded denial leaving the thread OPEN for human review. Unsure surfaces to the user. Bounded re-review loop (default 3 iterations). Use when the user has a PR with review comments to resolve, says "respond to copilot", "resolve the review comments on PR #N", "address the PR feedback", or wants to close out review feedback before merge.
 argument-hint: "[PR ref or URL] [optional: --posture auto|draft|comment-only] [optional: --max-loops N] [optional: --filter <regex>]"
+requires-skills: []
+requires-config: []
 ---
 
 # Resolve Reviews

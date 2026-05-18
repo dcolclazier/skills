@@ -2,6 +2,8 @@
 name: post-merge-cleanup
 description: Run the post-merge cleanup checklist for a PR the user has just merged — close the originating issue, delete the merged branch (local + remote), strip "remove once #N merges" TODOs and temp instrumentation, draft a CHANGELOG entry, schedule any rollout/soak follow-ups, and surface the judgment-call cleanups (feature-flag removal, stakeholder notification, CONTEXT.md updates) for the human. Triggered when the user signals merge — "the PR merged", "I merged it", "we shipped #142" — or when the agent detects via the configured tracker (per `docs/agents/issue-tracker.md`) that a PR it has context for has flipped to merged. Reads posture from `docs/agents/post-merge-cleanup.md` (`auto` / `draft` / `comment-only`). NOT for cleanup that requires re-implementation (use `/tdd` on a follow-up issue), NOT for pre-merge review (use `/self-review`), and NOT for inbound review-comment resolution (use `/resolve-reviews`) — this skill assumes the merge has already happened.
 argument-hint: "[optional: PR ref or URL, defaults to last-touched PR] [optional: --posture auto|draft|comment-only] [optional: --skip <task>]"
+requires-skills: []
+requires-config: []
 ---
 
 # Post-Merge Cleanup

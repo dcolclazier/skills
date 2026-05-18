@@ -2,6 +2,8 @@
 name: self-review
 description: Run a multi-persona pre-PR self-review on the current branch (or specified branch), classify each finding into agree-and-fix / disagree-and-justify / unsure-and-ask-user, then act per a configured posture. Agree-and-fix applies the fix as a new commit on the branch. Disagree-and-justify records the deliberate decision in `REVIEW-NOTES.md` (committed alongside) explaining why we're shipping despite the suggestion. Unsure surfaces to the user. Reuses `/score`'s `pre-pr` rubric (multi-persona review combining `pr` + `staged-commit` lenses). Use when the user wants to self-review their own work before opening a PR, says "review this branch before I push", "self-review", "audit before PR", or wants a multi-persona pass on local changes. NOT for reviewing already-open PRs (use `/resolve-reviews` for inbound, `/score --rubric pr` for outbound assessment without action).
 argument-hint: "[optional: branch name, defaults to current] [optional: --posture auto|draft|comment-only] [optional: --filter <regex>]"
+requires-skills: []
+requires-config: []
 ---
 
 # Self-Review

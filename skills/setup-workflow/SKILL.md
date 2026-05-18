@@ -2,6 +2,8 @@
 name: setup-workflow
 description: Bootstraps per-repo configuration for the engineering skill suite (grill-me, to-prd, score, to-issues, triage, tdd, self-review, resolve-reviews, post-merge-cleanup, diagnose, improve-codebase-architecture, zoom-out). Writes a `## Agent skills` block in CLAUDE.md/AGENTS.md plus the core config files in `docs/agents/` that downstream skills consume. Includes an opt-in 2-minute tutorial for first-time users. Run once per repo before using the workflow; rerun later for guided, section-scoped updates (switch tracker, adjust labels, change context layout, set posture for the PR-bookending skills). Use when the user says set up engineering skills, configure this repo for the workflow, set up triage, set up agent skills, or onboard a junior dev to the skill suite.
 disable-model-invocation: true
+requires-skills: []
+requires-config: []
 ---
 
 # Setup Engineering Workflow
