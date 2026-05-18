@@ -25,17 +25,35 @@ assert_pass() {
     fi
 }
 
+# assert_reject: like assert_pass but expects non-zero exit, AND optionally
+# asserts the stderr error message contains a given substring (locks in *which*
+# rejection path fired, so a regression that rejects for the wrong reason
+# doesn't pass green).
 assert_reject() {
     local label="$1"
     local target="$2"
-    if ! bash "$VALIDATE" "$target" >/dev/null 2>&1; then
-        echo "  PASS: $label"
-        PASS=$((PASS + 1))
-    else
+    local expected_stderr_fragment="${3:-}"
+
+    local stderr
+    stderr=$(bash "$VALIDATE" "$target" 2>&1 >/dev/null)
+    local exit_code=$?
+
+    if [ $exit_code -eq 0 ]; then
         echo "  FAIL: $label (expected validate to REJECT, but it accepted)"
         FAIL=$((FAIL + 1))
         FAILURES+=("$label")
+        return
     fi
+
+    if [ -n "$expected_stderr_fragment" ] && ! grep -qF "$expected_stderr_fragment" <<< "$stderr"; then
+        echo "  FAIL: $label (rejected, but stderr missing expected fragment '$expected_stderr_fragment'; got: $stderr)"
+        FAIL=$((FAIL + 1))
+        FAILURES+=("$label")
+        return
+    fi
+
+    echo "  PASS: $label"
+    PASS=$((PASS + 1))
 }
 
 echo "== Fixture acceptance tests =="
@@ -45,10 +63,12 @@ assert_pass   "valid-with-deps accepted"          "$FIXTURES/valid-with-deps/SKI
 
 echo
 echo "== Fixture rejection tests =="
-assert_reject "invalid-missing-name rejected"     "$FIXTURES/invalid-missing-name/SKILL.md"
-assert_reject "invalid-missing-requires rejected" "$FIXTURES/invalid-missing-requires/SKILL.md"
-assert_reject "invalid-malformed-yaml rejected"   "$FIXTURES/invalid-malformed-yaml/SKILL.md"
-assert_reject "invalid-unknown-field rejected"    "$FIXTURES/invalid-unknown-field/SKILL.md"
+assert_reject "invalid-missing-name rejected"             "$FIXTURES/invalid-missing-name/SKILL.md"             "missing required field 'name'"
+assert_reject "invalid-missing-requires rejected"         "$FIXTURES/invalid-missing-requires/SKILL.md"         "missing required field 'requires-"
+assert_reject "invalid-malformed-yaml rejected"           "$FIXTURES/invalid-malformed-yaml/SKILL.md"           "malformed YAML"
+assert_reject "invalid-unknown-field rejected"            "$FIXTURES/invalid-unknown-field/SKILL.md"            "unknown field 'wat'"
+assert_reject "invalid-missing-close-frontmatter rejected" "$FIXTURES/invalid-missing-close-frontmatter/SKILL.md" "unterminated frontmatter"
+assert_reject "non-existent file rejected"                "$FIXTURES/does-not-exist/SKILL.md"                   "target not found"
 
 echo
 echo "== Real-codebase acceptance test =="
